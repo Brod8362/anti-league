@@ -18,11 +18,15 @@ class SQLConnection {
    * @return Some(str) if set, None if not set.
    */
   def apply(guild: Long, setting: String): Option[String] = {
-    None
+    sql"SELECT value FROM server_config WHERE guild=$guild AND setting=$setting".map(_.string("value")).single().apply()
   }
 
   def apply(guild: Guild, setting: String): Option[String] = {
     this.apply(guild.getIdLong, setting)
+  }
+
+  def apply(guild: Guild, setting: String, default: String): String = {
+    this.apply(guild, setting).getOrElse(default)
   }
 
   /**
@@ -32,7 +36,7 @@ class SQLConnection {
    * @param value The value of the setting to set
    */
   def set(guild: Long, setting: String, value: String): Unit = {
-
+    sql"INSERT OR REPLACE INTO server_config VALUES($guild, $setting, $value)".executeUpdate().apply()
   }
 
   def set(guild: Guild, setting: String, value: String): Unit = {
