@@ -71,8 +71,11 @@ object LeagueBanBot extends ListenerAdapter {
       val ban_delay = sql(event.getGuild, Setting.BAN_DELAY, "15").toInt
 
       if (ban_delay > 0) {
+        val ban_time = System.currentTimeMillis/1000 + (ban_delay * 60)
+        val time_fmt_relative = s"<t:$ban_time:R>"
+        val time_absolute = s"<t:$ban_time:t>"
         event.getUser.openPrivateChannel.queue(v => v.sendMessage("It appears you have started playing **League of Legends.** " +
-          s"Please close the game, or you will be banned from __${event.getGuild.getName}__ in **$ban_delay minutes.**").queue())
+          s"Please close the game, or you will be banned from __${event.getGuild.getName}__ $time_fmt_relative (at $time_absolute)").queue())
       }
 
       if (ban_delay >= 10) {

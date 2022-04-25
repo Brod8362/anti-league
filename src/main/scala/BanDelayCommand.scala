@@ -17,6 +17,10 @@ class BanDelayCommand(implicit sql: SQLConnection) extends LBCommand("ban_delay"
 
   override def run(event: SlashCommandInteractionEvent): Unit = {
     val amt = event.getOption("new_delay").getAsInt
+    if (amt < 0) {
+      event.reply("Value must be positive.").seq()
+      return
+    }
     sql.set(event.getGuild, Setting.BAN_DELAY, amt.toString)
     event.reply(s"Ban delay updated to **$amt minutes**.").seq()
   }
