@@ -1,18 +1,19 @@
 package pw.byakuren.nolol
 
-import pw.byakuren.nolol.util.Util.{ReplyCallbackUtil, UserUtil}
+import pw.byakuren.nolol.util.Util.{PoolUtil, ReplyCallbackUtil, UserUtil}
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity.ActivityType
-import net.dv8tion.jda.api.entities.{Activity, Member}
+import net.dv8tion.jda.api.entities.{Activity, Member, PrivateChannel}
 import net.dv8tion.jda.api.events.ReadyEvent
 import net.dv8tion.jda.api.events.interaction.command.{CommandAutoCompleteInteractionEvent, SlashCommandInteractionEvent}
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.events.user.{UserActivityEndEvent, UserActivityStartEvent}
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import pw.byakuren.nolol.util.{Analytics, Setting}
+import pw.byakuren.nolol.util.{Analytics, PackageInfo, Setting}
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.collection.mutable
@@ -23,7 +24,8 @@ object LeagueBanBot extends ListenerAdapter {
 
   private val commands: Seq[LBCommand] = Seq(new BanDelayCommand, new ChannelCommand, new InviteCommand)
 
-  private val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(128)
+  private val THREAD_POOL_SIZE = Option(System.getenv("LP_THREADS")).getOrElse("128").toInt
+  private val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(THREAD_POOL_SIZE)
   private val threads: mutable.HashMap[Member, ScheduledFuture[_]] = new mutable.HashMap()
   private val reminders: mutable.HashMap[Member, ScheduledFuture[_]] = new mutable.HashMap()
   private val addtime: mutable.HashMap[Member, Long] = new mutable.HashMap()
@@ -39,6 +41,8 @@ object LeagueBanBot extends ListenerAdapter {
         bansToday = 0
       }
     }, 24, 24, TimeUnit.HOURS)
+    val owner = event.getJDA.retrieveApplicationInfo().complete().getOwner
+    owner.openPrivateChannel().complete().sendMessage(f"online running build git ${PackageInfo.VERSION}").queue()
   }
 
   def main(args: Array[String]): Unit = {
@@ -132,5 +136,28 @@ object LeagueBanBot extends ListenerAdapter {
 
   override def onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent): Unit = {
     commands.find(_.name == event.getName).foreach(_.autocomplete(event))
+  }
+
+  override def onMessageReceived(event: MessageReceivedEvent): Unit = {
+    event.getChannel match {
+      case x: PrivateChannel if !event.getAuthor.isBot=>
+        event.getJDA.retrieveApplicationInfo().queue(applicationInfo =>
+        {
+          if (applicationInfo.getOwner.getIdLong == x.getUser.getIdLong) {
+            val runtime = Runtime.getRuntime
+            val mb = 1024 * 1024
+            val content =
+              s"""
+                |__BOT STATUS__
+                |Memory: ${(runtime.totalMemory()-runtime.freeMemory())/mb}MB/${runtime.totalMemory()/mb}MB
+                |Thread Pool: ${executor.used}/$THREAD_POOL_SIZE
+                |Today/Total: $bansToday/$bansTotal
+                |""".stripMargin
+            applicationInfo.getOwner.openPrivateChannel().queue(c => c.sendMessage(content).queue())
+          }
+        })
+      case _ =>
+        //not direct message, don't care
+    }
   }
 }

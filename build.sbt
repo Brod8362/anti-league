@@ -8,6 +8,9 @@ lazy val root = (project in file("."))
     idePackagePrefix := Some("pw.byakuren.nolol")
   )
 
+enablePlugins(GitVersioning)
+git.useGitDescribe := true
+
 resolvers += "jcenter-bintray" at "https://jcenter.bintray.com"
 
 libraryDependencies ++= Seq("net.dv8tion" % "JDA" % "5.0.0-alpha.10",

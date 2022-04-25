@@ -4,6 +4,8 @@ package util
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction
 
+import java.util.concurrent.{ScheduledExecutorService, ThreadPoolExecutor}
+
 object Util {
 
   implicit class ReplyCallbackUtil(x: ReplyCallbackAction) {
@@ -27,6 +29,17 @@ object Util {
       } catch {
         case e: Throwable =>
           onFail.foreach(cb => cb(e))
+      }
+    }
+  }
+
+  implicit class PoolUtil(x: ScheduledExecutorService) {
+    def used: Long = {
+      x match {
+        case z: ThreadPoolExecutor =>
+          z.getTaskCount
+        case _ =>
+          -1
       }
     }
   }
