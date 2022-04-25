@@ -81,7 +81,7 @@ object LeagueBanBot extends ListenerAdapter {
       if (ban_delay >= 10) {
         val remind = executor.schedule(new Runnable() {
           override def run(): Unit = {
-            event.getUser.sendMessage(s"Only **5 minutes** remain until your ban from __${event.getGuild.getName}__.")
+            event.getUser.sendPM(s"Only **5 minutes** remain until your ban from __${event.getGuild.getName}__.")
             reminders.remove(event.getMember)
           }
         }, ban_delay-5, TimeUnit.MINUTES)
@@ -93,11 +93,12 @@ object LeagueBanBot extends ListenerAdapter {
           try {
             threads.remove(event.getMember)
             reminders.remove(event.getMember)
-            event.getUser.sendMessage(s"Your time is up, and you have been banned from __${event.getGuild.getName}__. Consider bettering yourself, and don't play league anymore.")
+            event.getUser.sendPM(s"Your time is up, and you have been banned from __${event.getGuild.getName}__. Consider bettering yourself, and don't play league anymore.")
             event.getMember.ban(0).queue()
-            dest_channel.sendMessage(f"${event.getMember} has been banned for playing League of Legends! They will not be missed.").queue()
             bansToday+=1
             bansTotal+=1
+            sql.incrementLifetimeBans()
+            dest_channel.sendMessage(f"${event.getMember} has been banned for playing League of Legends! They will not be missed.").queue()
           } catch {
             case e: InsufficientPermissionException =>
 
@@ -154,7 +155,7 @@ object LeagueBanBot extends ListenerAdapter {
                 |__BOT STATUS__
                 |Memory: ${(runtime.totalMemory()-runtime.freeMemory())/mb}MB/${runtime.totalMemory()/mb}MB
                 |Thread Pool: ${executor.used}/$THREAD_POOL_SIZE
-                |Today/Total: $bansToday/$bansTotal
+                |Today/Session/Lifetime: $bansToday/$bansTotal/${sql.lifetimeBans()}
                 |""".stripMargin
             applicationInfo.getOwner.openPrivateChannel().queue(c => c.sendMessage(content).queue())
           }

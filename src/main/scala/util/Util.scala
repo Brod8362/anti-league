@@ -23,7 +23,7 @@ object Util {
   }
 
   implicit class UserUtil(x: User) {
-    def sendMessage(content: String, onFail: Option[Throwable => Unit] = None): Unit = {
+    def sendPM(content: String, onFail: Option[Throwable => Unit] = None): Unit = {
       try {
         x.openPrivateChannel().complete.sendMessage(content).complete() //complete is INTENTIONAL, to ensure the message is delivered to the user.
       } catch {

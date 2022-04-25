@@ -10,6 +10,8 @@ class SQLConnection {
   implicit val session: AutoSession.type = AutoSession
 
   sql"CREATE TABLE IF NOT EXISTS server_config(guild INTEGER NOT NULL, setting STRING NOT NULL, value STRING, PRIMARY KEY(guild,setting))".execute().apply()
+  sql"CREATE TABLE IF NOT EXISTS analytics(key STRING PRIMARY KEY NOT NULL, value INTEGER NOT NULL)".execute().apply()
+  sql"INSERT OR IGNORE INTO analytics VALUES('lifetime_bans', 0)".execute.apply()
 
   /**
    * Get a server's setting.
@@ -41,6 +43,14 @@ class SQLConnection {
 
   def set(guild: Guild, setting: String, value: String): Unit = {
     this.set(guild.getIdLong, setting, value)
+  }
+
+  def incrementLifetimeBans(): Unit = {
+    sql"UPDATE analytics SET value = value + 1 WHERE key='lifetime_bans'".executeUpdate().apply()
+  }
+
+  def lifetimeBans(): Int = {
+    sql"SELECT value FROM analytics WHERE key='lifetime_bans'".map(_.int("value")).single().apply().getOrElse(0)
   }
 
 }
