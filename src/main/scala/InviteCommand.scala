@@ -16,12 +16,11 @@ class InviteCommand extends LBCommand("invite", "Get an invite link for the bot,
         |
         |Want to invite Anti-League to your server? [Click here](https://discord.com/api/oauth2/authorize?client_id=967601110326050816&permissions=2052&scope=bot%20applications.commands)
         |
-        |Source code available on github:
-        |https://github.com/Brod8362/anti-league
+        |Source code available on [Github](https://github.com/Brod8362/anti-league)
         |
         |Thanks for using Anti-League!
         |""".stripMargin)
-      eb.setFooter(s"Git Build: ${PackageInfo.VERSION}")
+      eb.setFooter(s"Git Build: ${PackageInfo.VERSION.take(10)}")
     event.replyEmbeds(eb.build()).q()
   }
 }

@@ -156,6 +156,7 @@ object LeagueBanBot extends ListenerAdapter {
                 |Memory: ${(runtime.totalMemory()-runtime.freeMemory())/mb}MB/${runtime.totalMemory()/mb}MB
                 |Thread Pool: ${executor.used}/$THREAD_POOL_SIZE
                 |Today/Session/Lifetime: $bansToday/$bansTotal/${sql.lifetimeBans()}
+                |Commit: ${PackageInfo.VERSION.take(10)}
                 |""".stripMargin
             applicationInfo.getOwner.openPrivateChannel().queue(c => c.sendMessage(content).queue())
           }
