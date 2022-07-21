@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import pw.byakuren.nolol.util.{Analytics, PackageInfo, Setting}
+import pw.byakuren.nolol.util.{APIAnalytics, Analytics, PackageInfo, Setting}
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.collection.mutable
@@ -31,6 +31,7 @@ object LeagueBanBot extends ListenerAdapter {
   private val addtime: mutable.HashMap[Member, Long] = new mutable.HashMap()
   private var bansTotal = 0
   private var bansToday = 0
+  private val api = new APIAnalytics("anti-league")
 
   override def onReady(event: ReadyEvent): Unit = {
     event.getJDA.getPresence.setActivity(Activity.playing("not League of Legends"))
@@ -99,6 +100,13 @@ object LeagueBanBot extends ListenerAdapter {
             bansTotal+=1
             sql.incrementLifetimeBans()
             dest_channel.sendMessage(f"${event.getMember} has been banned for playing League of Legends! They will not be missed.").queue()
+            try {
+              api.updateUsage(event.getGuild.getIdLong, 0)
+            } catch {
+              case e: Throwable =>
+                val owner = event.getJDA.retrieveApplicationInfo().complete().getOwner
+                owner.openPrivateChannel().complete().sendMessage(s"couldn't update usage analytics:\n$e")
+            }
           } catch {
             case e: InsufficientPermissionException =>
 

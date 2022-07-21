@@ -10,6 +10,8 @@ import java.awt.Color
 
 object Analytics extends ListenerAdapter {
 
+  val api = new APIAnalytics("anti-league")
+
   override def onGuildJoin(event: GuildJoinEvent): Unit = {
     guildUpdate(joined = true, event.getGuild)
 
@@ -37,8 +39,14 @@ object Analytics extends ListenerAdapter {
     val owner = guild.getJDA.retrieveApplicationInfo().complete().getOwner
     val txt = s"${if (joined) "joined" else "left"} guild `${guild.getName}`:${guild.getId} (owned by <@${guild.getOwnerId}>) " +
       s"(${guild.getMemberCount} members) [${guild.getJDA.getGuilds.size()} servers]"
-    owner.openPrivateChannel().complete().sendMessage(txt).queue()
-    println(txt)
+    val dm = owner.openPrivateChannel().complete()
+    dm.sendMessage(txt).queue()
+    try {
+      api.updateGuilds(guild.getJDA.getGuilds.size())
+    } catch {
+      case e: Throwable =>
+        dm.sendMessage(s"couldn't update guild analytics:\n$e").queue()
+    }
   }
 
 
