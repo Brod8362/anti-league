@@ -3,6 +3,7 @@ package util
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent
 import net.dv8tion.jda.api.events.guild.{GuildJoinEvent, GuildLeaveEvent}
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
@@ -35,6 +36,10 @@ object Analytics extends ListenerAdapter {
     guildUpdate(joined = false, event.getGuild)
   }
 
+  override def onGuildUpdateName(event: GuildUpdateNameEvent): Unit = {
+    api.updateGuildName(event.getGuild.getIdLong, event.getNewName)
+  }
+
   def guildUpdate(joined: Boolean, guild: Guild): Unit = {
     val owner = guild.getJDA.retrieveApplicationInfo().complete().getOwner
     val txt = s"${if (joined) "joined" else "left"} guild `${guild.getName}`:${guild.getId} (owned by <@${guild.getOwnerId}>) " +
@@ -43,6 +48,7 @@ object Analytics extends ListenerAdapter {
     dm.sendMessage(txt).queue()
     try {
       api.updateGuilds(guild.getJDA.getGuilds.size())
+      api.updateGuildName(guild.getIdLong, guild.getName)
     } catch {
       case e: Throwable =>
         dm.sendMessage(s"couldn't update guild analytics:\n$e").queue()

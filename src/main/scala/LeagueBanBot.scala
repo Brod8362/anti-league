@@ -43,7 +43,9 @@ object LeagueBanBot extends ListenerAdapter {
       }
     }, 24, 24, TimeUnit.HOURS)
     val owner = event.getJDA.retrieveApplicationInfo().complete().getOwner
-    owner.openPrivateChannel().complete().sendMessage(f"online running build git ${PackageInfo.VERSION}").queue()
+    val online_msg = f"online running build git ${PackageInfo.VERSION}"
+    owner.openPrivateChannel().complete().sendMessage(online_msg).queue()
+    api.log(online_msg)
   }
 
   def main(args: Array[String]): Unit = {
