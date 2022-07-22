@@ -3,7 +3,7 @@ package util
 
 import java.net.{HttpURLConnection, URL, URLEncoder}
 
-class APIAnalytics(name: String, base: String = "http://27.0.0.1:9646") {
+class APIAnalytics(name: String, base: String = "http://127.0.0.1:9646") {
   private def buildParams(params: Map[String, String]): String = {
     params.map({
       case (k, v) => URLEncoder.encode(k, "UTF-8") + "=" + URLEncoder.encode(v, "UTF-8")
